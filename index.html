@@ -11,7 +11,8 @@ header{padding:15px 20px;display:flex;justify-content:space-between;align-items:
 .logo{color:#e50914;font-size:28px;font-weight:900}
 input{padding:10px;width:220px;border-radius:20px;border:none;outline:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:15px;padding:20px}
-.card{background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer}
+.card{background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer;transition:0.2s}
+.card:hover{transform:scale(1.05)}
 .card img{width:100%;height:220px;object-fit:cover}
 .card p{padding:10px;font-size:14px}
 h2{padding:20px 20px 0}
@@ -21,16 +22,51 @@ h2{padding:20px 20px 0}
 <header><div class="logo">MOVA</div><input id="search" placeholder="Search movie..."></header>
 <h2>🔥 Trending Movies</h2>
 <div class="grid" id="movies"></div>
+
+<div id="movieModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:1000; overflow-y:auto;">
+  <div style="max-width:600px; margin:40px auto; background:#1a1a1a; border-radius:15px; padding:20px; color:white; position:relative;">
+    <button onclick="closeModal()" style="position:absolute; right:15px; top:10px; background:red; color:white; border:none; padding:8px 13px; border-radius:50%; cursor:pointer; font-size:16px; z-index:10;">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
 <script>
 const API_KEY="9d703090a84d7c40846371b8936a3a75";
 const IMG="https://image.tmdb.org/t/p/w500";
+let allMovies=[];
+
 async function load(url){
-let r=await fetch(url); let d=await r.json();
-document.getElementById("movies").innerHTML=d.results.map(m=>`<div class="card"><img src="${IMG+m.poster_path}"><p>${m.title||m.name}</p></div>`).join("");
+  let r=await fetch(url); let d=await r.json();
+  allMovies=d.results;
+  document.getElementById("movies").innerHTML=d.results.map((m,i)=>`<div class="card" onclick="showDetails(${i})"><img src="${IMG+m.poster_path}" onerror="this.src='https://via.placeholder.com/500x750?text=No+Image'"><p>${m.title||m.name}</p></div>`).join("");
 }
+
+function showDetails(i){
+  let movie = allMovies[i];
+  document.getElementById('movieModal').style.display='block';
+  document.getElementById('modalContent').innerHTML = `
+    <img src="https://image.tmdb.org/t/p/w500${movie.backdrop_path || movie.poster_path}" style="width:100%; border-radius:10px;">
+    <h2 style="padding:15px 0 0;">${movie.title || movie.name}</h2>
+    <p style="margin:10px 0; color:#ffcc00;">⭐ ${movie.vote_average} &nbsp;|&nbsp; 📅 ${movie.release_date || movie.first_air_date || ''} &nbsp;|&nbsp; 👁️ ${movie.vote_count} votes</p>
+    <p style="color:#ddd; line-height:1.7; font-size:15px;">${movie.overview || 'No description available.'}</p>
+    <a href="https://www.youtube.com/results?search_query=${encodeURIComponent((movie.title || movie.name) + ' official trailer')}" target="_blank" style="display:block; text-align:center; background:#e50914; color:white; padding:13px; border-radius:10px; text-decoration:none; font-weight:bold; margin-top:18px;">▶ Watch Trailer on YouTube</a>
+    <a href="https://www.google.com/search?q=${encodeURIComponent((movie.title || movie.name) + ' full movie watch')}" target="_blank" style="display:block; text-align:center; background:#333; color:white; padding:13px; border-radius:10px; text-decoration:none; font-weight:bold; margin-top:10px;">🔍 Where to Watch</a>
+  `;
+}
+
+function closeModal(){
+  document.getElementById('movieModal').style.display='none';
+}
+
+document.getElementById('movieModal').addEventListener('click', function(e){
+  if(e.target.id === 'movieModal') closeModal();
+});
+
 load(`https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`);
+
 document.getElementById("search").addEventListener("input",e=>{
-if(e.target.value.length>2) load(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${e.target.value}`);
+  if(e.target.value.length>2) load(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${e.target.value}`);
+  if(e.target.value.length==0) load(`https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`);
 });
 </script>
 </body>
