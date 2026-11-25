@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mova - Watch Movies</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#0f0f0f;color:#fff}
+header{padding:15px 20px;display:flex;justify-content:space-between;align-items:center;background:#000;position:sticky;top:0;z-index:10}
+.logo{color:#e50914;font-size:28px;font-weight:900}
+input{padding:10px;width:220px;border-radius:20px;border:none;outline:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:15px;padding:20px}
+.card{background:#1a1a1a;border-radius:10px;overflow:hidden;cursor:pointer}
+.card img{width:100%;height:220px;object-fit:cover}
+.card p{padding:10px;font-size:14px}
+h2{padding:20px 20px 0}
+</style>
+</head>
+<body>
+<header><div class="logo">MOVA</div><input id="search" placeholder="Search movie..."></header>
+<h2>🔥 Trending Movies</h2>
+<div class="grid" id="movies"></div>
+<script>
+const API_KEY="9d703090a84d7c40846371b8936a3a75";
+const IMG="https://image.tmdb.org/t/p/w500";
+async function load(url){
+let r=await fetch(url); let d=await r.json();
+document.getElementById("movies").innerHTML=d.results.map(m=>`<div class="card"><img src="${IMG+m.poster_path}"><p>${m.title||m.name}</p></div>`).join("");
+}
+load(`https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`);
+document.getElementById("search").addEventListener("input",e=>{
+if(e.target.value.length>2) load(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${e.target.value}`);
+});
+</script>
+</body>
+</html>
